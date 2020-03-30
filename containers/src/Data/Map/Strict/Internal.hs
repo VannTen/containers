@@ -1533,26 +1533,32 @@ fromList ((kx0, x0) : xs0) | not_ordered kx0 xs0 = x0 `seq` fromList' (Bin 1 kx0
 -- > fromListWith (++) [(5,"a"), (5,"b"), (3,"b"), (3,"a"), (5,"a")] == fromList [(3, "ab"), (5, "aba")]
 -- > fromListWith (++) [] == empty
 
-fromListWith :: Ord k => (a -> a -> a) -> [(k,a)] -> Map k a
-fromListWith f xs
-  = fromListWithKey (\_ x y -> f x y) xs
+fromListWith  :: Ord k  => (a -> a -> a) -> [(k,a)] -> Map k a
+fromListWith = fromFoldableWith
+
+fromFoldableWith :: (Foldable f, Ord k) => (a -> a -> a) -> f (k,a) -> Map k a
+fromFoldableWith f xs
+  = fromFoldableWithKey (\_ x y -> f x y) xs
 #if __GLASGOW_HASKELL__
-{-# INLINABLE fromListWith #-}
+{-# INLINABLE fromFoldableWith #-}
 #endif
 
--- | /O(n*log n)/. Build a map from a list of key\/value pairs with a combining function. See also 'fromAscListWithKey'.
+-- | /O(n*log n)/. Build a map from a list of key\/value pairs with a combining function. See also 'fromAscFoldableWithKey'.
 --
 -- > let f k a1 a2 = (show k) ++ a1 ++ a2
--- > fromListWithKey f [(5,"a"), (5,"b"), (3,"b"), (3,"a"), (5,"a")] == fromList [(3, "3ab"), (5, "5a5ba")]
--- > fromListWithKey f [] == empty
+-- > fromFoldableWithKey f [(5,"a"), (5,"b"), (3,"b"), (3,"a"), (5,"a")] == fromFoldable [(3, "3ab"), (5, "5a5ba")]
+-- > fromFoldableWithKey f [] == empty
 
-fromListWithKey :: Ord k => (k -> a -> a -> a) -> [(k,a)] -> Map k a
-fromListWithKey f xs
+fromListWithKey  :: Ord k  => (k -> a -> a -> a) -> [(k,a)] -> Map k a
+fromListWithKey = fromFoldableWithKey
+
+fromFoldableWithKey :: (Foldable f, Ord k)  => (k -> a -> a -> a) -> f (k,a) -> Map k a
+fromFoldableWithKey f xs
   = Foldable.foldl' ins empty xs
   where
     ins t (k,x) = insertWithKey f k x t
 #if __GLASGOW_HASKELL__
-{-# INLINABLE fromListWithKey #-}
+{-# INLINABLE fromFoldableWithKey #-}
 #endif
 
 {--------------------------------------------------------------------
